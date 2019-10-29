@@ -1,0 +1,194 @@
+﻿@model IEnumerable<PMS_HT.Areas.CRM.Models.tbl_crm_task>
+@using PMS_HT.Utility;
+@{
+    ViewBag.Title = "Tasks";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+@section styles{
+
+    <style>   
+
+        .task-box {
+            border: 1px solid #eee;
+            padding: 10px 15px;
+            margin: 10px 0px;
+            border-radius: 0px;
+            box-shadow: 0 2px 1px -1px rgba(0,0,0,.2), 0 1px 1px 0 rgba(0,0,0,.14), 0 1px 3px 0 rgba(0,0,0,.12);
+        }
+
+        .task-box h3 {
+            font-size: 16px;
+            margin: 0px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(0,0,0,.3);
+            padding: 10px 0px;
+            display: block;
+            font-weight: 700;
+        }
+
+        .task-box p {
+            margin: 8px 0px;
+            display: block;
+        }
+
+        .task-box .btn {
+            text-align: right;
+            border-radius: 0px;
+        }
+
+        .title-text{
+            font-weight:bold;
+        }
+    </style>
+
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="portlet box red-flamingo">
+            <div class="portlet-title">
+                <div class="caption">
+                    @if (User.IsInRole(Permissions.CRM.ADD_TASK))
+                    {
+                        <a href="@Url.Action("Add", "Task", new { area = "CRM"})" id="Add" class="btn default btnAdd" style="font-weight:bold;"><i class="glyphicon glyphicon-plus"></i>&nbsp;Create New</a>
+                    }
+                </div>
+            </div>
+            <div class="portlet-body">
+                <div class="row">
+                    <table class="table table-bordered" id="todo-task-table">
+                        <thead>
+                            <tr>
+                                <th style="display:none;">&nbsp;</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr class="col-md-3">
+                                    <td>
+                                        <div class="task-box">
+
+                                            <h3>@item.Task_Title</h3>
+
+                                            <p><span class="title-text">Date : </span><span> @item.Date_Time.Value.ToString("g")</span></p>
+
+                                            <p><span class="title-text">Company : </span><span> @item.Company_Name</span></p>
+
+                                            <p><span class="title-text">Contact : </span><span> @item.Contact_No</span></p>
+
+
+                                            @if (item.Task_Priority == Constant.CRM_TASK_PRIORITY_HIGH)
+                                            {
+                                                <p><span class="title-text">Priority :</span><span style="font-weight:bold; color:red;"> @item.Task_Priority</span></p>
+                                            }
+                                            else
+                                            {
+                                                <p><span>Priority :</span><span style="font-weight:bold;"> @item.Task_Priority</span></p>
+                                            }
+
+                                            @if (item.Task_Status == Constant.CRM_TASK_STATUS_COMPLETE)
+                                            {
+                                                <p><span class="title-text">Status : </span><span style="color:#0d20ef"> @item.Task_Status</span></p>
+                                            }
+                                            else
+                                            {
+                                                <p><span class="title-text">Status : </span><span> @item.Task_Status</span></p>
+                                            }
+                                           
+                                            @if (User.IsInRole(Permissions.CRM.EDIT_TASK) || User.IsInRole(Permissions.CRM.DELETE_TASK))
+                                            {
+                                                <p>
+                                                    <a href="@Url.Action("Details", "Task", new { id = item.Task_ID })" class="btn btn-xs btn-primary btnDetails"><i class="fa fa-eye"></i> View</a>
+                                                    <a href="@Url.Action("Edit", "Task", new { id = item.Task_ID })" class="btn btn-xs btn-warning btnEdit"><i class="fa fa-edit"></i> Edit</a>
+                                                    <a href="@Url.Action("Delete", "Task", new { id = item.Task_ID })" class="btn btn-xs btn-danger btnDelete" onclick="return confirm('Are you sure you want to delete this?')"> <i class="fa fa-trash"></i>  Delete</a>
+                                                </p>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="Add-Model" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color:#0094ff;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="title">Add Lead</h4>
+            </div>
+            <div class="divForAdd">
+
+                @*Modal Content Goes Here*@
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section scripts {
+
+    <script src="~/assets/global/plugins/bootstrap-toastr/toastr.min.js"></script>
+    <script src="~/Scripts/AddViewModel.js"></script>
+    <script>
+
+        $(document).ready(function () {
+            $('#todo-task-table').DataTable();
+        });
+
+        $('.btnAdd').click(function (event) {
+            event.preventDefault();
+            $.get(this.href, function (response) {
+                $('.divForAdd').html(response);
+                $('#Add-Model').modal({
+                    backdrop: 'static',
+                }, 'show');
+                $('#title').html("Create Task");
+            });
+        });
+
+        $('.btnEdit').click(function (event) {
+            event.preventDefault();
+            $.get(this.href, function (response) {
+                $('.divForAdd').html(response);
+                $('#Add-Model').modal({
+                    backdrop: 'static',
+                }, 'show');
+                $('#title').html("Edit Task");
+            });
+        });
+
+        $('.btnDetails').click(function (event) {
+            event.preventDefault();
+            $.get(this.href, function (response) {
+                $('.divForAdd').html(response);
+                $('#Add-Model').modal({
+                    backdrop: 'static',
+                }, 'show');
+                $('#title').html("Details");
+                $('.divForAdd').css("padding", "10px")
+            });
+        })
+    </script>
+}
+
+
+
+
+
+
+
+
